@@ -1,15 +1,35 @@
-﻿namespace ECommerce.Domain.Entities
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
+namespace ECommerce.Domain.Entities
 {
     public class CartItem
     {
-        public Guid CartItemID { get; set; }
-        public Guid CartID { get; set; }
-        public Cart? Cart { get; set; } 
-        public Guid ProductID { get; set; }
-        public Product? Product { get; set; } 
-        public int Quantity { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? CartItemID { get; set; }
 
+        [BsonElement("cartId")]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? CartID { get; set; }
+
+        [BsonIgnore]
+        public Cart? Cart { get; set; }
+
+        [BsonElement("productId")]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? ProductID { get; set; }
+
+        [BsonIgnore]
+        public Product? Product { get; set; }
+
+        [BsonElement("quantity")]
+        public int Quantity { get; set; }
+
+        [BsonElement("createdAt")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [BsonElement("updatedAt")]
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 }
