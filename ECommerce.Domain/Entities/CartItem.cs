@@ -7,7 +7,7 @@ namespace ECommerce.Domain.Entities
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? CartItemID { get; set; }
+        public string? Id { get; set; }
 
         [BsonElement("cartId")]
         [BsonRepresentation(BsonType.ObjectId)]
