@@ -21,6 +21,7 @@ namespace ECommerce.Domain.Entities
 
         [BsonElement("items")]
         public List<CartItem> Items { get; set; } = new List<CartItem>();
+        // ignore
 
         [BsonIgnore]
         public decimal TotalAmount
