@@ -7,7 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="wwwroot\Admin\.DS_Store" />
+    <PackageReference Include="MongoDB.Driver" Version="3.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ECommerce.Application\ECommerce.Application.csproj" />
+    <ProjectReference Include="..\ECommerce.Persistence\ECommerce.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

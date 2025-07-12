@@ -10,10 +10,10 @@ namespace ECommerce.Domain.Entities
         public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
 
         [BsonElement("name")]
-        public string? Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [BsonElement("description")]
-        public string? Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         [BsonElement("createdAt")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

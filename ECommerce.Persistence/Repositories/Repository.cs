@@ -1,78 +1,105 @@
 ﻿using System.Linq.Expressions;
 using ECommerce.Application.Interfaces;
+using MongoDB.Bson;
+using MongoDB.Driver;
 
 namespace ECommerce.Persistence.Repositories
 {
-    public class Repository<T>: IRepository<T> where T : class
+    public class Repository<T> : IRepository<T> where T : class
     {
-        private readonly DbContext _context;
-        private readonly DbSet<T> _dbSet;
+        private readonly IMongoCollection<T> _collection;
 
-        public Repository(DbContext context)
+        public Repository(IMongoDatabase database)
         {
-            _context = context;
-            _dbSet = _context.Set<T>();
+            var collectionName = typeof(T).Name.ToLower() + "s";
+            _collection = database.GetCollection<T>(collectionName);
         }
 
         public async Task<T> CreateAsync(T entity)
         {
-            await _dbSet.AddAsync(entity);
-            await _context.SaveChangesAsync();
+            await _collection.InsertOneAsync(entity);
             return entity;
         }
 
         public async Task<List<T>> GetAllAsync()
         {
-            return await _dbSet.ToListAsync();
+            return await _collection.Find(_ => true).ToListAsync();
         }
 
-        public async Task<List<T>> GetAllWithExplicitIncludeAsync(Func<IQueryable<T>, IQueryable<T>> includeFunc)
+        public async Task<T?> GetByIdAsync(string id)
         {
-            IQueryable<T> query = _dbSet.AsQueryable();
-            if (includeFunc != null)
-            {
-                query = includeFunc(query);
-            }
-            return await query.ToListAsync();
-        }
+            if (!ObjectId.TryParse(id, out _))
+                return null;
 
-        public async Task<List<T>> GetAllWithIncludeAsync(params Expression<Func<T, object>>[] includes)
-        {
-            IQueryable<T> query = _dbSet;
-            foreach (var include in includes)
-            {
-                query = query.Include(include);
-            }
-            return await query.ToListAsync();
-        }
-
-        public async Task<T> GetByIdAsync(int id)
-        {
-            return await _dbSet.FindAsync(id) ?? throw new
-                KeyNotFoundException($"Entity of type {typeof(T).Name} with ID {id} was not found.");
-
-        }
-
-        public async Task RemoveAsync(T entity)
-        {
-            _dbSet.Remove(entity);
-            await _context.SaveChangesAsync();
+            var filter = Builders<T>.Filter.Eq("_id", ObjectId.Parse(id));
+            return await _collection.Find(filter).FirstOrDefaultAsync();
         }
 
         public async Task UpdateAsync(T entity)
         {
-            _dbSet.Update(entity);
-            await _context.SaveChangesAsync();
+            var idProperty = typeof(T).GetProperty("Id");
+            if (idProperty != null)
+            {
+                var id = idProperty.GetValue(entity)?.ToString();
+                if (!string.IsNullOrEmpty(id) && ObjectId.TryParse(id, out _))
+                {
+                    var filter = Builders<T>.Filter.Eq("_id", ObjectId.Parse(id));
+                    await _collection.ReplaceOneAsync(filter, entity);
+                }
+            }
         }
 
-        public async Task<int> GetCountAsync()
+        public async Task DeleteAsync(string id)
         {
-            return await _dbSet.CountAsync();
+            if (!ObjectId.TryParse(id, out _))
+                return;
+
+            var filter = Builders<T>.Filter.Eq("_id", ObjectId.Parse(id));
+            await _collection.DeleteOneAsync(filter);
+        }
+
+        public async Task<long> GetCountAsync()
+        {
+            return await _collection.CountDocumentsAsync(_ => true);
         }
 
         public async Task<T?> GetByFilterAsync(Expression<Func<T, bool>> filter)
         {
-            return await _dbSet.Where(filter).SingleOrDefaultAsync();
+            return await _collection.Find(filter).FirstOrDefaultAsync();
+        }
+
+        public async Task<List<T>> GetByFilterListAsync(Expression<Func<T, bool>> filter)
+        {
+            return await _collection.Find(filter).ToListAsync();
+        }
+
+        public async Task<bool> ExistsAsync(string id)
+        {
+            if (!ObjectId.TryParse(id, out _))
+                return false;
+
+            var filter = Builders<T>.Filter.Eq("_id", ObjectId.Parse(id));
+            return await _collection.Find(filter).AnyAsync();
+        }
+
+        public async Task<List<T>> GetPagedAsync(int page, int pageSize)
+        {
+            var skip = (page - 1) * pageSize;
+            return await _collection.Find(_ => true)
+                .Skip(skip)
+                .Limit(pageSize)
+                .ToListAsync();
+        }
+
+        public async Task<List<T>> GetPagedAsync(int page, int pageSize, Expression<Func<T, bool>>? filter = null)
+        {
+            var skip = (page - 1) * pageSize;
+            var mongoFilter = filter ?? (_ => true);
+            
+            return await _collection.Find(mongoFilter)
+                .Skip(skip)
+                .Limit(pageSize)
+                .ToListAsync();
         }
     }
 }

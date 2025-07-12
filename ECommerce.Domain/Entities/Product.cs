@@ -7,13 +7,13 @@ namespace ECommerce.Domain.Entities
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? Id { get; set; }
+        public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
 
         [BsonElement("name")]
-        public string? Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [BsonElement("description")]
-        public string? Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         [BsonElement("price")]
         [BsonRepresentation(BsonType.Decimal128)]
@@ -30,7 +30,7 @@ namespace ECommerce.Domain.Entities
 
         [BsonElement("categoryId")]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? CategoryID { get; set; }
+        public string CategoryId { get; set; } = string.Empty;
 
         [BsonIgnore]
         public Category? Category { get; set; }

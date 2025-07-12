@@ -5,23 +5,16 @@ namespace ECommerce.Domain.Entities
 {
     public class CartItem
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string? Id { get; set; }
-
-        [BsonElement("cartId")]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string? CartID { get; set; }
-
-        [BsonIgnore]
-        public Cart? Cart { get; set; }
-
         [BsonElement("productId")]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? ProductID { get; set; }
+        public string ProductId { get; set; } = string.Empty;
 
-        [BsonIgnore]
-        public Product? Product { get; set; }
+        [BsonElement("productName")]
+        public string ProductName { get; set; } = string.Empty;
+
+        [BsonElement("price")]
+        [BsonRepresentation(BsonType.Decimal128)]
+        public decimal Price { get; set; }
 
         [BsonElement("quantity")]
         public int Quantity { get; set; }
@@ -31,5 +24,14 @@ namespace ECommerce.Domain.Entities
 
         [BsonElement("updatedAt")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        [BsonIgnore]
+        public decimal SubTotal
+        {
+            get
+            {
+                return Price * Quantity;
+            }
+        }
     }
 }

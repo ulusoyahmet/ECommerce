@@ -1,17 +1,27 @@
 using MongoDB.Driver;
+using ECommerce.Application.Configuration;
+using ECommerce.Application.Interfaces;
+using ECommerce.Application.Services;
+using ECommerce.Persistence.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-// 1. Connection String (from your appsettings.json or environment variables)
-const string connectionString = "mongodb://localhost:27017";
+// Configure MongoDB
+var mongoDbConfig = builder.Configuration.GetSection("MongoDb").Get<MongoDbConfiguration>() 
+    ?? new MongoDbConfiguration();
 
-// 2. Create a Client
-var mongoClient = new MongoClient(connectionString);
+var mongoClient = new MongoClient(mongoDbConfig.ConnectionString);
+var database = mongoClient.GetDatabase(mongoDbConfig.DatabaseName);
 
-// 3. Get a Database Reference
-IMongoDatabase database = mongoClient.GetDatabase("ECommerceDb");
+// Register MongoDB services
+builder.Services.AddSingleton<IMongoClient>(mongoClient);
+builder.Services.AddSingleton<IMongoDatabase>(database);
+builder.Services.AddSingleton<MongoDbService>();
+
+// Register repositories
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

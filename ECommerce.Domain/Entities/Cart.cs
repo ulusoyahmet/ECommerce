@@ -7,11 +7,11 @@ namespace ECommerce.Domain.Entities
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? Id { get; set; }
+        public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
 
         [BsonElement("userId")]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? UserID { get; set; }
+        public string UserId { get; set; } = string.Empty;
 
         [BsonElement("createdAt")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -19,7 +19,25 @@ namespace ECommerce.Domain.Entities
         [BsonElement("updatedAt")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        [BsonElement("cartItems")]
-        public ICollection<CartItem>? CartItems { get; set; }
+        [BsonElement("items")]
+        public List<CartItem> Items { get; set; } = new List<CartItem>();
+
+        [BsonIgnore]
+        public decimal TotalAmount
+        {
+            get
+            {
+                return Items.Sum(item => item.Quantity * item.Price);
+            }
+        }
+
+        [BsonIgnore]
+        public int TotalItems
+        {
+            get
+            {
+                return Items.Sum(item => item.Quantity);
+            }
+        }
     }
 }
